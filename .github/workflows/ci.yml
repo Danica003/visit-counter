@@ -30,7 +30,7 @@ jobs:
         run: pytest
 
       - name: Build Docker image
-        run: docker build -t visit-counter
+        run: docker build -t visit-counter .
 
       - name: Start services with Docker compose
         run: |
