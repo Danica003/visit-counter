@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_requests:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint with ruff
+        run: ruff check .
+      
+      - name: Run tests
+        run: pytest
+
+      - name: Build Docker image
+        run: docker build -t visit-counter
+
+      - name: Start services with Docker compose
+        run: |
+          cp .env.example .env
+          docker compose up -d --build --wait
+      
+      - name: Run healthcheck script
+        run: ./scripts/healthcheck.sh http://localhost:8080
+      
+      - name: Check visit counter
+        run: curl --fail http://localhost:8080/visits
+
+      - name: Stop services
+        if: always()
+        run: docker compose down
+          
+
+      
