@@ -1,20 +1,28 @@
-FROM python:3.12-slim
+FROM python:3.12-alpine AS builder
+
+
+# builder
+
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# runtime
+
+FROM python:3.12-alpine
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONBUFFERED=1 \
     APP_PORT=5000
 
-WORKDIR /APP_PORT
+RUN apk add --no-cache tzdata \
+    && adduser -D -u 1000 appuser
 
-RUN apt-get update && apt-get install -y --no-install-recommends tzdata \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+COPY --from=builder /install /usr/local
 COPY . .
 
-RUN useradd --create-home --uid 1000 appuser
 USER appuser
 
 EXPOSE 5000
