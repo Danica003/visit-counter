@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
@@ -55,6 +58,16 @@ jobs:
       - name: Stop services
         if: always()
         run: docker compose down
-          
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.GITHUN_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push image to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker tag visit-counter "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:${{ github.sha }}"          
 
       
