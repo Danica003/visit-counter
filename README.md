@@ -8,19 +8,19 @@ Glavni deo projekta su `Dockerfile`, `docker-compose.yml`, CI pipeline i `script
 ## Arhitektura
 
 ```
-                 ┌──────────────── Docker Compose ─────────────────┐
+                 ┌──────────────── Docker Compose ──────────────────┐
                  │                                                  │
   korisnik  ───► │  app (Flask, port 5000)  ───►  redis (port 6379) │
-  (curl/browser) │        ▲                            │           │
-  localhost:8080 │        │                            ▼           │
-                 │  HOST_PORT:5000              volume: redis-data │
+  (curl/browser) │        ▲                             │           │
+  localhost:8080 │        │                             ▼           │
+                 │  HOST_PORT:5000               volume: redis-data │
                  └──────────────────────────────────────────────────┘
 ```
 
                 
 - **app** – Flask aplikacija; 
 - **redis** – čuva brojač;
-- **redis-data** – imenovani volume, pa brojač preživljava `docker compose down`.
+- **redis-data** – imenovani volume, pa se brojač ne resetuje posle `docker compose down`.
 
 ## Endpointi
  
@@ -55,7 +55,7 @@ Provera:
 curl http://localhost:8080/visits    # {"visits": 1}
 curl http://localhost:8080/visits    # {"visits": 2}
 docker compose down && docker compose up -d
-curl http://localhost:8080/visits    # {"visits": 3}  <- brojač je sačuvan
+curl http://localhost:8080/visits    # {"visits": 3}  
 ./scripts/healthcheck.sh http://localhost:8080
 ```
 
@@ -76,7 +76,7 @@ Provera:
 curl.exe http://localhost:8080/visits    # {"visits": 1}
 curl.exe http://localhost:8080/visits    # {"visits": 2}
 docker compose down; docker compose up -d
-curl.exe http://localhost:8080/visits    # {"visits": 3}  <- brojač je sačuvan
+curl.exe http://localhost:8080/visits    # {"visits": 3}  
 ```
 
 ```bash
@@ -92,8 +92,8 @@ Ako je port 8080 zauzet, promenite `HOST_PORT` u `.env` (npr. `HOST_PORT=8081`) 
 | Komanda | Šta radi |
 |---|---|
 | `make build` | Pravi Docker sliku |
-| `make up` | Podiže aplikaciju i Redis (sa rebuild-om) |
-| `make down` | Gasi servise (volume ostaje) |
+| `make up` | Podiže aplikaciju i Redis |
+| `make down` | Gasi servise, volume ostaje |
 | `make test` | Pokreće linter (ruff) i testove (pytest) |
 | `make logs` | Prikazuje logove aplikacije uživo |
 | `make healthcheck` | Pokreće `scripts/healthcheck.sh` na portu iz `.env` |
@@ -140,8 +140,8 @@ docker pull ghcr.io/danica003/visit-counter:<sha-commita>
 
   | Verzija | Veličina |
   |---|---|
-  | Jedna faza, `python:3.12-slim` | 46,5 MB |
-  | Multi-stage, `python:3.12-alpine` | 21,3 MB |
+  | Jedna faza, `python:3.12-slim` | 193 MB |
+  | Multi-stage, `python:3.12-alpine` | 89,4 MB |
 
   Najveći deo uštede dolazi od manje osnovne slike, jer zavisnosti ne zahtevaju kompajlere koje bi multi-stage inače ostavio u builder fazi.
 - **Zavisnosti se instaliraju pre kopiranja koda** – Docker kešira sloj sa zavisnostima, pa su rebuild-ovi brzi dok se `requirements.txt` ne promeni.
@@ -172,7 +172,7 @@ docker pull ghcr.io/danica003/visit-counter:<sha-commita>
 **Problem:** Vreme u logovima je kasnilo sat vremena u odnosu na lokalno. \
 **Uzrok:**   Kontejner podrazumevano radi u UTC zoni. \
 **Rešenje:** Dodala sam `TZ=Europe/Belgrade` u `.env` i instalirala `tzdata` u Dockerfile-u. \
-**Napomena:** U produkciji bih ostavila UTC, jer je to standard za logove sa više servera. \
+**Napomena:** U daljem radu bih ostavila UTC, jer je to standard za logove sa više servera. \
 
 ## Šta bih unapredila da imam više vremena
 - **Produkcijski server (gunicorn)** umesto Flask razvojnog servera.
