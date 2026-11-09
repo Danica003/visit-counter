@@ -154,7 +154,6 @@ docker pull ghcr.io/danica003/visit-counter:<sha-commita>
 - **Testovi sa `monkeypatch`** – unit testovi zamenjuju Redis klijenta lažnim funkcijama, pa rade u CI-ju bez prave baze. Stvarna veza sa Redisom proverava se integracionim testom u CI-ju.
 - **`ubuntu-24.04` umesto `ubuntu-latest` u CI-ju** – okruženje se ne menja bez moje izmene.
 - **Trivy akcija vezana za tačnu verziju** – zbog napada na Trivy-jeve GitHub oznake u martu 2026.
-- **`.gitattributes` sa `*.sh text eol=lf`** – Bash skripta radi i kada se repo klonira na Windowsu.
 
 ## Problemi na koje sam naišla
 
